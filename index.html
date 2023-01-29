@@ -2,35 +2,163 @@
 <html>
 	<head>
 		<title>My First Web Page</title>
+		<link
+		rel="stylesheet"
+		href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"
+	  />
 	</head>
 	<body>
-		<h1>My First Web Page</h1>
-		<p>My first paragraph.</p>
+		<audio id="30" src="rire/RIRE30.wav" hidden></audio>
+		<audio id="60" src="rire/RIRE60.wav" hidden></audio>
+		<audio id="40" src="rire/RIRE40.wav" hidden></audio>
+		<audio id="70" src="rire/RIRE70.wav" hidden></audio>
+		<audio id="90"	src="rire/RIRE90.wav" hidden></audio>
+		<div id="gauge">
+			<div id="laugh"></div>
+			<div id="level"></div>
+		</div>
+		<p id="exemple">Bouge cette barre pour tester: 50%</p>
+		<input type="range" min="0" max="100" value="50" oninput="tester(this.value)">
+		<p id="data">My first paragraph.</p>
 		<!-- <iframe src="https://twitch.tv/popout/rocketleague/poll" frameborder="0"></iframe> -->
 		<script>
-			fetch("https://gql.twitch.tv/gql#origin=twilight", {
-				"credentials": "omit",
+			let spawnInterval = 1000;
+			let spawnActive = true;
+			async function data(){
+				let data = await fetch("https://justcors.com/l_nqyz9xf02ff/https://gql.twitch.tv/gql#origin=twilight", {
 				"headers": {
 					"User-Agent": "Mozilla/5.0 (X11; Linux x86_64; rv:109.0) Gecko/20100101 Firefox/109.0",
 					"Accept": "*/*",
-					"Accept-Language": "en-US",
-					"Sec-Fetch-Dest": "empty",
-					"Sec-Fetch-Mode": "no-cors",
-					"Sec-Fetch-Site": "same-site",
 					"Client-Id": "kimne78kx3ncx6brgo4mv6wki5h1ko",
-					"X-Device-Id": "VBbeKUpOI487x5zcCUUvNVSJsymtLPcx",
-					"Client-Version": "8ac81725-d086-4b4b-9793-cad3690799a6",
-					"Client-Session-Id": "3e15ac832109c614",
-					"Client-Integrity": "v4.public.eyJjbGllbnRfaWQiOiJraW1uZTc4a3gzbmN4NmJyZ280bXY2d2tpNWgxa28iLCJjbGllbnRfaXAiOiI3OC4xOTIuMjE3LjUxIiwiZGV2aWNlX2lkIjoiVkJiZUtVcE9JNDg3eDV6Y0NVVXZOVlNKc3ltdExQY3giLCJleHAiOiIyMDIzLTAxLTMwVDA5OjI2OjMwWiIsImlhdCI6IjIwMjMtMDEtMjlUMTc6MjY6MzBaIiwiaXNfYmFkX2JvdCI6ImZhbHNlIiwiaXNzIjoiVHdpdGNoIENsaWVudCBJbnRlZ3JpdHkiLCJuYmYiOiIyMDIzLTAxLTI5VDE3OjI2OjMwWiIsInVzZXJfaWQiOiIifUnpd8eG2nTt_eVcPrphZ0v2PeZre1Rn5EvmOXn6Ek18SFhUW2-fdgBvY-3C1tWhyeuqEf19ownvlksJhcsLQA8",
 					"Content-Type": "text/plain;charset=UTF-8",
-					"Pragma": "no-cache",
-					"Cache-Control": "no-cache"
+					"Sec-Fetch-Mode": "no-cors",
 				},
-				"referrer": "https://www.twitch.tv/",
 				"body": "[{\"operationName\":\"ViewablePollsPage\",\"variables\":{\"login\":\"potatozytb\"},\"extensions\":{\"persistedQuery\":{\"version\":1,\"sha256Hash\":\"7e7e8f94ff51089e98d3baa90e0c96734f8dc87d48f7a1a529f22e6d2684a086\"}}}]",
-				"method": "POST",
-				"mode": "cors"
-			});
+				"method": "POST"
+				});
+				return data.json();
+			}
+			function muteAllAudios(){
+				let audios = document.getElementsByTagName("audio");
+				for (let i = 0; i < audios.length; i++){
+					audios[i].pause();
+				}
+			}
+			function getRand(min, max){
+				return Math.floor(Math.random() * (max - min + 1)) + min;
+			}
+			function updateGauge(percent){
+				let level = document.getElementById("level");
+				level.style.height = `${percent}%`;
+				switch (true) {
+					case (percent < 40):
+						muteAllAudios();
+						spawnActive = false;
+						document.getElementById("30").play();
+						break;
+					case (percent > 40	&& percent < 60):
+						spawnActive = true;	
+						muteAllAudios();
+						spawnInterval = 5000;
+						document.getElementById("40").play();
+						break;
+					case (percent > 60	&& percent < 70):
+						spawnActive = true;
+						spawnInterval = 2000;
+						muteAllAudios();
+						document.getElementById("60").play();
+						break;
+					case (percent > 70 && percent < 90):
+						spawnActive = true;
+						spawnInterval = 500;
+						muteAllAudios();
+						document.getElementById("70").play();
+						break;
+					case (percent > 90):
+						spawnActive = true;
+						spawnInterval = 150;
+						muteAllAudios();
+						document.getElementById("90").play();
+						break;
+				}
+			}
+			function tester(percent){
+				let text = document.getElementById("exemple");
+				text.innerHTML = `Bouge cette barre pour tester: ${percent}%`;
+				updateGauge(percent);
+			}
+			function putGif(id, location){
+				let newImage = document.createElement("img");
+				let container = document.getElementById("laugh");
+				newImage.src = `gifs/${id}.gif`;
+				newImage.style.width = "100px";
+				newImage.style.position = "absolute";
+				newImage.style.left = `${location.x}px`;
+				newImage.style.top = `${location.y}px`;
+				newImage.style.zIndex = "1";
+				newImage.classList.add("animate__animated", "animate__fadeOutDown", "animate__slow")
+				container.appendChild(newImage);
+				setTimeout(() => {
+					container.removeChild(newImage);
+				}, 1000);
+			}
+			for (let audio of document.getElementsByTagName("audio")){
+				audio.volume = 0.5;
+				audio.loop = true;
+			}
+			function spawner(){
+				setTimeout(() => {
+					spawner();
+					if (spawnActive == false) return;
+					putGif(getRand(1,13), {x: getRand(-250, 250), y: getRand(0, 400)});
+				}, spawnInterval)
+			}
+			spawner();
+			setInterval(() => {
+				data().then(async (res) => {
+					const element = document.getElementById("data");
+					let data = res;
+					console.log(data);
+					let poll = data[0].data.channel.viewablePoll
+					if (poll != null){
+						let text = `Poll: ${poll.title}, votes ${poll.totalVoters}\n1:${poll.choices[0].totalVoters}\n2:${poll.choices[1].totalVoters}`;
+						element.innerHTML = text;
+						let percent = poll.choices[0].totalVoters / poll.totalVoters * 100;
+						updateGauge(percent);
+					}
+					else{
+						element.innerHTML = "No poll";
+						// muteAllAudios();
+					}
+				});
+			}, 1000)
 		</script>
+		<style>
+			#gauge {
+				width: 100px;
+				height: 500px;
+				/* border: 1px solid black; */
+				background-color: #ff0054;
+				position: relative;
+				margin-left: 200px;
+				margin-right: 200px;
+			}
+			#level {
+				width: 100%;
+				height: 50%;
+				background-color: #04daff;
+				position: absolute;
+				bottom: 0;
+			}
+			#laugh {
+				width: 100%;
+				height: 100%;
+				position: absolute;
+				bottom: 0;
+			}
+			.emoji{
+				position: absolute;
+			}
+		</style>
 	</body>
 </html>
