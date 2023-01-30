@@ -17,13 +17,15 @@
 			<div id="laugh"></div>
 			<div id="level"></div>
 		</div>
-		<p id="exemple">Bouge cette barre pour tester: 50%</p>
+		<!-- <p id="exemple">Bouge cette barre pour tester: 50%</p>
 		<input type="range" min="0" max="100" value="50" oninput="tester(this.value)">
-		<p id="data">My first paragraph.</p>
+		<p id="data">My first paragraph.</p> -->
 		<!-- <iframe src="https://twitch.tv/popout/rocketleague/poll" frameborder="0"></iframe> -->
 		<script>
 			let spawnInterval = 1000;
 			let spawnActive = true;
+			let pollOn = false;
+			let audioOn = false;
 			async function data(){
 				let data = await fetch("https://justcors.com/l_nqyz9xf02ff/https://gql.twitch.tv/gql#origin=twilight", {
 				"headers": {
@@ -47,6 +49,10 @@
 			function getRand(min, max){
 				return Math.floor(Math.random() * (max - min + 1)) + min;
 			}
+			function playAudio(id){
+				if (audioOn == false) return;
+				document.getElementById(id).play();
+			}
 			function updateGauge(percent){
 				let level = document.getElementById("level");
 				level.style.height = `${percent}%`;
@@ -54,31 +60,31 @@
 					case (percent < 40):
 						muteAllAudios();
 						spawnActive = false;
-						document.getElementById("30").play();
+						playAudio("30");
 						break;
 					case (percent > 40	&& percent < 60):
 						spawnActive = true;	
 						muteAllAudios();
 						spawnInterval = 5000;
-						document.getElementById("40").play();
+						playAudio("40");
 						break;
 					case (percent > 60	&& percent < 70):
 						spawnActive = true;
 						spawnInterval = 2000;
 						muteAllAudios();
-						document.getElementById("60").play();
+						playAudio("60");
 						break;
 					case (percent > 70 && percent < 90):
 						spawnActive = true;
 						spawnInterval = 500;
 						muteAllAudios();
-						document.getElementById("70").play();
+						playAudio("70");
 						break;
 					case (percent > 90):
 						spawnActive = true;
 						spawnInterval = 150;
 						muteAllAudios();
-						document.getElementById("90").play();
+						playAudio("90");
 						break;
 				}
 			}
@@ -102,6 +108,13 @@
 					container.removeChild(newImage);
 				}, 1000);
 			}
+			function pollActivated(){
+				pollOn = true;
+				setTimeout(() => {
+					audioOn = true;
+					spawnActive = true;
+				}, 10000);
+			}
 			for (let audio of document.getElementsByTagName("audio")){
 				audio.volume = 0.5;
 				audio.loop = true;
@@ -110,7 +123,7 @@
 				setTimeout(() => {
 					spawner();
 					if (spawnActive == false) return;
-					putGif(getRand(1,13), {x: getRand(-250, 250), y: getRand(0, 400)});
+					putGif(getRand(1,16), {x: getRand(-250, 250), y: getRand(0, 400)});
 				}, spawnInterval)
 			}
 			spawner();
@@ -121,6 +134,7 @@
 					console.log(data);
 					let poll = data[0].data.channel.viewablePoll
 					if (poll != null){
+						if(pollOn == false) pollActivated();
 						let text = `Poll: ${poll.title}, votes ${poll.totalVoters}\n1:${poll.choices[0].totalVoters}\n2:${poll.choices[1].totalVoters}`;
 						element.innerHTML = text;
 						let percent = poll.choices[0].totalVoters / poll.totalVoters * 100;
@@ -128,7 +142,10 @@
 					}
 					else{
 						element.innerHTML = "No poll";
-						// muteAllAudios();
+						muteAllAudios();
+						spawnActive = false;
+						pollOn = false;
+						audioOn = false;
 					}
 				});
 			}, 1000)
