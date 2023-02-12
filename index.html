@@ -17,6 +17,7 @@
 		<div id="gauge">
 			<div id="laugh"></div>
 			<div id="level"></div>
+			<img src="img/barre.png" id="barre">
 		</div>
 		
 		<input type="button" value="Start poll" onclick="startPoll()">
@@ -209,7 +210,7 @@
 			#level {
 				width: 100%;
 				height: 50%;
-				background-color: #04daff;
+				background-color: #0078ff;
 				position: absolute;
 				bottom: 0;
 			}
@@ -221,6 +222,13 @@
 			}
 			.emoji{
 				position: absolute;
+			}
+			#barre{
+				position: absolute;
+				top: 50%;
+				width: 160px;
+				transform: translate(-30px, -50%);
+				filter: drop-shadow(0 0 0.35rem rgb(0, 0, 0));
 			}
 		</style>
 	</body>
