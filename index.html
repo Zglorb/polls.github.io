@@ -69,7 +69,9 @@
 			}
 			function updateGauge(percent){
 				let level = document.getElementById("level");
+				const bar = document.getElementById("barre");
 				level.style.height = `${percent > 100 ? 100 : percent}%`;
+				bar.style.top = `${100 - (percent > 100 ? 100 : percent)}%`;
 				switch (true) {
 					case (percent < 40):
 						muteAllAudios();
@@ -203,15 +205,18 @@
 				width: 100px;
 				height: 500px;
 				/* border: 1px solid black; */
-				background-color: #ff0054;
+				background: rgb(51,0,0);
+				background: linear-gradient(0deg, rgba(51,0,0,1) 0%, rgba(255,0,84,1) 400px); 
 				position: relative;
 				margin-left: 200px;
 				margin-right: 200px;
+				margin-top: 100px;
 			}
 			#level {
 				width: 100%;
 				height: 50%;
-				background-color: #0078ff;
+				background: rgb(2,0,36);
+				background: linear-gradient(0deg, rgba(2,0,36,1) 0%, rgba(0,120,255,1) 400px);
 				position: absolute;
 				bottom: 0;
 			}
@@ -228,7 +233,7 @@
 				position: absolute;
 				top: 50%;
 				width: 160px;
-				transform: translate(-30px, -50%);
+				transform: translate(-30px, -30%);
 				filter: drop-shadow(0 0 0.35rem rgb(0, 0, 0));
 			}
 		</style>
