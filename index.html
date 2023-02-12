@@ -69,7 +69,7 @@
 			}
 			function updateGauge(percent){
 				let level = document.getElementById("level");
-				level.style.height = `${percent}%`;
+				level.style.height = `${percent > 100 ? 100 : percent}%`;
 				switch (true) {
 					case (percent < 40):
 						muteAllAudios();
@@ -103,6 +103,7 @@
 				}
 			}
 			function tester(){
+				if (pollOn == false) return;
 				votes += 1;
 				updateGauge((votes * 100)/max)
 			}
