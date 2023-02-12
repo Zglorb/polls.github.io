@@ -19,9 +19,9 @@
 			<div id="level"></div>
 		</div>
 		
-		<!-- <input type="button" value="Start poll" onclick="startPoll()">
+		<input type="button" value="Start poll" onclick="startPoll()">
 		<input type="button" value="Stop poll" onclick="stopPoll()">
-		<input type="button" value="add vote" onclick="tester()"> -->
+		<input type="button" value="add vote" onclick="tester()">
 		<!-- <p id="exemple">Bouge cette barre pour tester: 50%</p>
 		<input type="range" min="0" max="100" value="50" oninput="tester(this.value)">
 		<p id="data">My first paragraph.</p> -->
@@ -29,6 +29,7 @@
 		<script>
 			const tmi = window.tmi;
 			let spawnInterval = 1000;
+			const dev = true;
 			let targetChannel = "potatozytb"
 			const percentageOfViewers = 0.6;
 			let spawnActive = false;
@@ -122,13 +123,13 @@
 			async function pollActivated(){
 				let res = (await data())[0].data;
 				console.log(res)
-				if (res.user.stream == null) {
+				if (res.user.stream == null && dev == false) {
 					stopPoll();
 					console.log("Stream is offline")
 					return;
 				}
 				console.log("Starting poll")
-				max = Math.round(res.user.stream.viewersCount * percentageOfViewers);
+				max = dev ? 20 : Math.round(res.user.stream.viewersCount * percentageOfViewers);
 				pollOn = true;
 				votes = 0;
 				updateGauge(0);
