@@ -6,6 +6,7 @@
 		rel="stylesheet"
 		href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"
 	  />
+	  <script src="https://github.com/tmijs/tmi.js/releases/download/v1.8.5/tmi.min.js"></script>
 	</head>
 	<body>
 		<audio id="30" src="rire/RIRE30.wav" hidden></audio>
@@ -17,15 +18,26 @@
 			<div id="laugh"></div>
 			<div id="level"></div>
 		</div>
+		
+		<!-- <input type="button" value="Start poll" onclick="startPoll()">
+		<input type="button" value="Stop poll" onclick="stopPoll()">
+		<input type="button" value="add vote" onclick="tester()"> -->
 		<!-- <p id="exemple">Bouge cette barre pour tester: 50%</p>
 		<input type="range" min="0" max="100" value="50" oninput="tester(this.value)">
 		<p id="data">My first paragraph.</p> -->
 		<!-- <iframe src="https://twitch.tv/popout/rocketleague/poll" frameborder="0"></iframe> -->
 		<script>
+			const tmi = window.tmi;
 			let spawnInterval = 1000;
-			let spawnActive = true;
+			let targetChannel = "potatozytb"
+			const percentageOfViewers = 0.6;
+			let spawnActive = false;
 			let pollOn = false;
 			let audioOn = false;
+			let votes = 0;
+			let max = 0;
+			let blacklist = [];
+			const validMessages = ["porvalo", "glumlenie"]
 			async function data(){
 				let data = await fetch("https://justcors.com/l_nqyz9xf02ff/https://gql.twitch.tv/gql#origin=twilight", {
 				"headers": {
@@ -35,7 +47,7 @@
 					"Content-Type": "text/plain;charset=UTF-8",
 					"Sec-Fetch-Mode": "no-cors",
 				},
-				"body": "[{\"operationName\":\"ViewablePollsPage\",\"variables\":{\"login\":\"potatozytb\"},\"extensions\":{\"persistedQuery\":{\"version\":1,\"sha256Hash\":\"7e7e8f94ff51089e98d3baa90e0c96734f8dc87d48f7a1a529f22e6d2684a086\"}}}]",
+				"body": `[{\"operationName\":\"UseViewCount\",\"variables\":{\"channelLogin\":\"${targetChannel}\"},\"extensions\":{\"persistedQuery\":{\"version\":1,\"sha256Hash\":\"00b11c9c428f79ae228f30080a06ffd8226a1f068d6f52fbc057cbde66e994c2\"}}}]`,
 				"method": "POST"
 				});
 				return data.json();
@@ -65,7 +77,7 @@
 					case (percent > 40	&& percent < 60):
 						spawnActive = true;	
 						muteAllAudios();
-						spawnInterval = 5000;
+						spawnInterval = 3000;
 						playAudio("40");
 						break;
 					case (percent > 60	&& percent < 70):
@@ -88,16 +100,15 @@
 						break;
 				}
 			}
-			function tester(percent){
-				let text = document.getElementById("exemple");
-				text.innerHTML = `Bouge cette barre pour tester: ${percent}%`;
-				updateGauge(percent);
+			function tester(){
+				votes += 1;
+				updateGauge((votes * 100)/max)
 			}
 			function putGif(id, location){
 				let newImage = document.createElement("img");
 				let container = document.getElementById("laugh");
 				newImage.src = `gifs/${id}.gif`;
-				newImage.style.width = "100px";
+				newImage.style.width = "50px";
 				newImage.style.position = "absolute";
 				newImage.style.left = `${location.x}px`;
 				newImage.style.top = `${location.y}px`;
@@ -108,13 +119,23 @@
 					container.removeChild(newImage);
 				}, 1000);
 			}
-			function pollActivated(){
+			async function pollActivated(){
+				let res = (await data())[0].data;
+				console.log(res)
+				if (res.user.stream == null) {
+					stopPoll();
+					console.log("Stream is offline")
+					return;
+				}
+				console.log("Starting poll")
+				max = Math.round(res.user.stream.viewersCount * percentageOfViewers);
 				pollOn = true;
-				setTimeout(() => {
-					audioOn = true;
-					spawnActive = true;
-				}, 10000);
+				votes = 0;
+				updateGauge(0);
+				blacklist = [];
+				audioOn = true;
 			}
+			// pollActivated()
 			for (let audio of document.getElementsByTagName("audio")){
 				audio.volume = 0.5;
 				audio.loop = true;
@@ -123,32 +144,56 @@
 				setTimeout(() => {
 					spawner();
 					if (spawnActive == false) return;
-					putGif(getRand(1,16), {x: getRand(-250, 250), y: getRand(0, 400)});
+					putGif(getRand(1,16), {x: getRand(-30, 70), y: getRand(0, 400)});
 				}, spawnInterval)
 			}
 			spawner();
-			setInterval(() => {
-				data().then(async (res) => {
-					const element = document.getElementById("data");
-					let data = res;
-					console.log(data);
-					let poll = data[0].data.channel.viewablePoll
-					if (poll != null){
-						if(pollOn == false) pollActivated();
-						let text = `Poll: ${poll.title}, votes ${poll.totalVoters}\n1:${poll.choices[0].totalVoters}\n2:${poll.choices[1].totalVoters}`;
-						element.innerHTML = text;
-						let percent = poll.choices[0].totalVoters / poll.totalVoters * 100;
-						updateGauge(percent);
-					}
-					else{
-						element.innerHTML = "No poll";
-						muteAllAudios();
-						spawnActive = false;
-						pollOn = false;
-						audioOn = false;
-					}
-				});
-			}, 1000)
+			const client = new tmi.Client({
+				channels: [ targetChannel ]
+			});
+
+			client.connect();
+
+			client.on('message', (channel, tags, message, self) => {
+				// console.log(`${tags['display-name']}: ${message}`);
+				if (tags.mod || tags['display-name'].toLowerCase() == targetChannel.toLowerCase()){
+					if (message.toLowerCase() == "!pstart")
+						startPoll()
+					if (message.toLowerCase() == "!pstop")
+						stopPoll()
+				}
+				if (pollOn == true){
+					if (!validMessages.includes(message.toLowerCase())) return
+					if (blacklist.includes(tags['display-name'])) return
+					blacklist.push(tags['display-name'])
+					votes += 1;
+					updateGauge((votes * 100)/max)
+				}
+			});
+			function startPoll(){
+				if (pollOn == false) pollActivated();
+			}
+			function stopPoll(){
+				muteAllAudios();
+				console.log("Stopping poll")
+				spawnActive = false;
+				pollOn = false;
+				audioOn = false;
+			}
+			// setInterval(() => {
+			// 	data().then(async (res) => {
+			// 		const element = document.getElementById("data");
+			// 		let data = res;
+			// 		console.log(data);
+			// 		let poll = data[0].data.channel.viewablePoll
+			// 		if (poll != null){
+			// 			updateGauge(percent);
+			// 		}
+			// 		else{
+			// 			element.innerHTML = "No poll";
+			// 		}
+			// 	});
+			// }, 1000)
 		</script>
 		<style>
 			#gauge {
