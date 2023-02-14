@@ -19,10 +19,9 @@
 			<div id="level"></div>
 			<img src="img/barre.png" id="barre">
 		</div>
-		
-		<input type="button" value="Start poll" onclick="startPoll()">
+		<!-- <input type="button" value="Start poll" onclick="startPoll()">
 		<input type="button" value="Stop poll" onclick="stopPoll()">
-		<input type="button" value="add vote" onclick="tester()">
+		<input type="button" value="add vote" onclick="tester()"> -->
 		<!-- <p id="exemple">Bouge cette barre pour tester: 50%</p>
 		<input type="range" min="0" max="100" value="50" oninput="tester(this.value)">
 		<p id="data">My first paragraph.</p> -->
@@ -30,7 +29,7 @@
 		<script>
 			const tmi = window.tmi;
 			let spawnInterval = 1000;
-			const dev = true;
+			const dev = false;
 			let targetChannel = "potatozytb"
 			const percentageOfViewers = 0.6;
 			let spawnActive = false;
